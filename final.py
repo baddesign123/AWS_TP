@@ -9,7 +9,21 @@ class GestionSondage:
         self.bucket_name = 'devoirpythonan'
         self.file_name_s3 = 'reponses_sondage.json'
 
-    
+    def save_to_aws(self):
+        s3 = boto3.client('s3', aws_access_key_id=self.aws_access_key_id, aws_secret_access_key=self.aws_secret_access_key)
+        try:
+            s3.upload_file(self.file_name_s3, self.bucket_name, self.file_name_s3)
+            print("Données téléchargées avec succès sur S3.")
+            return True
+        except NoCredentialsError:
+            print("Les identifiants AWS sont incorrects.")
+            return False
+
+    def savefichier(self, data, file_path):
+        with open(file_path, 'a') as json_file:
+            json.dump(data, json_file, indent=2)
+            json_file.write('\n')
+
     def repondre_sondage(self):
         q1 = "Intentions de quitter le pays"
         q2 = "Tranche dage"
@@ -52,5 +66,7 @@ class GestionSondage:
 
             r = reponses[i][reponse - 1]
             reponse_etudiant[questions[i]] = r
+        self.savefichier(reponse_etudiant, "reponses_sondage.json")
+        self.save_to_aws()
 
 
